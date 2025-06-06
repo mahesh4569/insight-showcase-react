@@ -1,53 +1,73 @@
 
 import React, { useState } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { useProjects } from '../hooks/useProjects';
+import FileUploadForm from './FileUploadForm';
 
 interface ProjectUploadFormProps {
-  onSubmit: (projectData: any) => void;
   onClose: () => void;
 }
 
-const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose }) => {
+const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    imageUrl: '',
-    downloadLink: '',
-    liveLink: '',
-    techStack: ['']
+    image_url: '',
+    download_link: '',
+    live_link: '',
+    tech_stack: ['']
   });
+  const [loading, setLoading] = useState(false);
+  const { createProject } = useProjects();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanedData = {
-      ...formData,
-      techStack: formData.techStack.filter(tech => tech.trim() !== '')
-    };
-    onSubmit(cleanedData);
+    setLoading(true);
+    
+    try {
+      const cleanedData = {
+        ...formData,
+        tech_stack: formData.tech_stack.filter(tech => tech.trim() !== '')
+      };
+      await createProject(cleanedData);
+      onClose();
+    } catch (error) {
+      console.error('Error creating project:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addTechStackItem = () => {
     setFormData({
       ...formData,
-      techStack: [...formData.techStack, '']
+      tech_stack: [...formData.tech_stack, '']
     });
   };
 
   const removeTechStackItem = (index: number) => {
-    const newTechStack = formData.techStack.filter((_, i) => i !== index);
+    const newTechStack = formData.tech_stack.filter((_, i) => i !== index);
     setFormData({
       ...formData,
-      techStack: newTechStack.length === 0 ? [''] : newTechStack
+      tech_stack: newTechStack.length === 0 ? [''] : newTechStack
     });
   };
 
   const updateTechStackItem = (index: number, value: string) => {
-    const newTechStack = [...formData.techStack];
+    const newTechStack = [...formData.tech_stack];
     newTechStack[index] = value;
     setFormData({
       ...formData,
-      techStack: newTechStack
+      tech_stack: newTechStack
     });
+  };
+
+  const handleImageUpload = (url: string) => {
+    setFormData({ ...formData, image_url: url });
+  };
+
+  const handleFileUpload = (url: string) => {
+    setFormData({ ...formData, download_link: url });
   };
 
   return (
@@ -92,33 +112,30 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Image URL
-            </label>
-            <input
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-              placeholder="https://example.com/image.jpg"
-              required
-            />
-          </div>
+          <FileUploadForm
+            onFileUploaded={handleImageUpload}
+            accept="image/*"
+            bucket="project-images"
+            folder="thumbnails"
+            label="Project Thumbnail"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Download Link (Google Drive)
-            </label>
-            <input
-              type="url"
-              value={formData.downloadLink}
-              onChange={(e) => setFormData({...formData, downloadLink: e.target.value})}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-              placeholder="https://drive.google.com/..."
-              required
-            />
-          </div>
+          {formData.image_url && (
+            <div className="mt-2">
+              <img 
+                src={formData.image_url} 
+                alt="Preview" 
+                className="w-full h-32 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
+          <FileUploadForm
+            onFileUploaded={handleFileUpload}
+            bucket="project-files"
+            folder="downloads"
+            label="Project Files"
+          />
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -126,8 +143,8 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose
             </label>
             <input
               type="url"
-              value={formData.liveLink}
-              onChange={(e) => setFormData({...formData, liveLink: e.target.value})}
+              value={formData.live_link}
+              onChange={(e) => setFormData({...formData, live_link: e.target.value})}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
               placeholder="https://example.com"
             />
@@ -138,7 +155,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose
               Tech Stack
             </label>
             <div className="space-y-3">
-              {formData.techStack.map((tech, index) => (
+              {formData.tech_stack.map((tech, index) => (
                 <div key={index} className="flex gap-2">
                   <input
                     type="text"
@@ -147,7 +164,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose
                     className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
                     placeholder="e.g., Python, Excel, Power BI"
                   />
-                  {formData.techStack.length > 1 && (
+                  {formData.tech_stack.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeTechStackItem(index)}
@@ -179,10 +196,17 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onSubmit, onClose
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2"
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50"
             >
-              <Upload className="w-5 h-5" />
-              <span>Upload Project</span>
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Upload className="w-5 h-5" />
+                  <span>Upload Project</span>
+                </>
+              )}
             </button>
           </div>
         </form>

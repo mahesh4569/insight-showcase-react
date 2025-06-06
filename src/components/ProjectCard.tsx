@@ -3,13 +3,13 @@ import React from 'react';
 import { Download, ExternalLink } from 'lucide-react';
 
 interface Project {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  techStack: string[];
-  imageUrl: string;
-  downloadLink: string;
-  liveLink?: string;
+  tech_stack: string[];
+  image_url?: string;
+  download_link?: string;
+  live_link?: string;
 }
 
 interface ProjectCardProps {
@@ -28,11 +28,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
     >
       {/* Project Image */}
       <div className="relative overflow-hidden h-48">
-        <img
-          src={project.imageUrl}
-          alt={project.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+        {project.image_url ? (
+          <img
+            src={project.image_url}
+            alt={project.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center">
+            <span className="text-white text-4xl">📊</span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
 
@@ -47,7 +53,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
 
         {/* Tech Stack */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {project.techStack.map((tech, techIndex) => (
+          {project.tech_stack.map((tech, techIndex) => (
             <span
               key={techIndex}
               className="px-3 py-1 bg-blue-600/30 text-blue-300 text-xs rounded-full border border-blue-500/30"
@@ -59,18 +65,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <a
-            href={project.downloadLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download</span>
-          </a>
-          {project.liveLink && (
+          {project.download_link && (
             <a
-              href={project.liveLink}
+              href={project.download_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download</span>
+            </a>
+          )}
+          {project.live_link && (
+            <a
+              href={project.live_link}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-slate-700/50 hover:bg-slate-600/50 text-white py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center justify-center hover:shadow-lg"

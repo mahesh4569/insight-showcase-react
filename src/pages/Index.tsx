@@ -1,18 +1,26 @@
 
 import React, { useState } from 'react';
-import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter } from 'lucide-react';
+import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import ContactButton from '../components/ContactButton';
 import FilterDropdown from '../components/FilterDropdown';
-import { mockProjects } from '../data/projects';
+import { useProjects } from '../hooks/useProjects';
+import { useAuth } from '../hooks/useAuth';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredProjects, setFilteredProjects] = useState(mockProjects);
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const { projects, loading } = useProjects();
+  const { user } = useAuth();
+
+  React.useEffect(() => {
+    filterProjects(searchTerm, selectedCategory);
+  }, [projects, searchTerm, selectedCategory]);
 
   // Get unique categories from projects
-  const categories = ['all', ...new Set(mockProjects.flatMap(project => project.techStack))];
+  const categories = ['all', ...new Set(projects.flatMap(project => project.tech_stack))];
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -25,21 +33,21 @@ const Index = () => {
   };
 
   const filterProjects = (searchTerm: string, category: string) => {
-    let filtered = mockProjects;
+    let filtered = projects;
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(project => 
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.techStack.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()))
+        project.tech_stack.some((tech: string) => tech.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     // Filter by category
     if (category !== 'all') {
       filtered = filtered.filter(project => 
-        project.techStack.some(tech => tech.toLowerCase() === category.toLowerCase())
+        project.tech_stack.some((tech: string) => tech.toLowerCase() === category.toLowerCase())
       );
     }
 
@@ -52,6 +60,27 @@ const Index = () => {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
         <div className="relative container mx-auto px-6 py-16 text-center">
+          {/* Auth Button */}
+          <div className="absolute top-4 right-4">
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white hover:bg-white/20 transition-all duration-300 flex items-center space-x-2"
+              >
+                <User className="w-5 h-5" />
+                <span>Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                to="/auth"
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white hover:bg-white/20 transition-all duration-300 flex items-center space-x-2"
+              >
+                <User className="w-5 h-5" />
+                <span>Login</span>
+              </Link>
+            )}
+          </div>
+
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
             📊 My Data Analysis
             <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -88,16 +117,25 @@ const Index = () => {
 
       {/* Projects Grid */}
       <div className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProjects.map((project, index) => (
-            <ProjectCard key={project.id} project={project} index={index} />
-          ))}
-        </div>
-        
-        {filteredProjects.length === 0 && (
+        {loading ? (
           <div className="text-center py-16">
-            <p className="text-slate-400 text-lg">No projects found matching your search.</p>
+            <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-400 text-lg">Loading projects...</p>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredProjects.map((project, index) => (
+                <ProjectCard key={project.id} project={project} index={index} />
+              ))}
+            </div>
+            
+            {filteredProjects.length === 0 && !loading && (
+              <div className="text-center py-16">
+                <p className="text-slate-400 text-lg">No projects found matching your search.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -109,7 +147,7 @@ const Index = () => {
             Interested in collaborating or discussing data analysis opportunities? I'd love to hear from you.
           </p>
           <div className="flex justify-center space-x-6">
-            <a href="mailto:your.email@example.com" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-colors duration-300 flex items-center space-x-2">
+            <a href="mailto:maheshvadla06@gmail.com" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-colors duration-300 flex items-center space-x-2">
               <Mail className="w-5 h-5" />
               <span>Email Me</span>
             </a>
