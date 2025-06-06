@@ -1,21 +1,48 @@
 
 import React, { useState } from 'react';
-import { Search, Download, Mail, Github, Linkedin, ExternalLink } from 'lucide-react';
+import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import ContactButton from '../components/ContactButton';
+import FilterDropdown from '../components/FilterDropdown';
 import { mockProjects } from '../data/projects';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [filteredProjects, setFilteredProjects] = useState(mockProjects);
+
+  // Get unique categories from projects
+  const categories = ['all', ...new Set(mockProjects.flatMap(project => project.techStack))];
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    const filtered = mockProjects.filter(project => 
-      project.title.toLowerCase().includes(term.toLowerCase()) ||
-      project.description.toLowerCase().includes(term.toLowerCase()) ||
-      project.techStack.some(tech => tech.toLowerCase().includes(term.toLowerCase()))
-    );
+    filterProjects(term, selectedCategory);
+  };
+
+  const handleCategoryFilter = (category: string) => {
+    setSelectedCategory(category);
+    filterProjects(searchTerm, category);
+  };
+
+  const filterProjects = (searchTerm: string, category: string) => {
+    let filtered = mockProjects;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(project => 
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.techStack.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Filter by category
+    if (category !== 'all') {
+      filtered = filtered.filter(project => 
+        project.techStack.some(tech => tech.toLowerCase() === category.toLowerCase())
+      );
+    }
+
     setFilteredProjects(filtered);
   };
 
@@ -35,15 +62,25 @@ const Index = () => {
             Explore my collection of data-driven insights and analytical solutions that transform complex datasets into actionable business intelligence.
           </p>
           
-          {/* Search Bar */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search projects or tools..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+          {/* Search and Filter Bar */}
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
+            {/* Search Bar */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search projects or tools..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+              />
+            </div>
+            
+            {/* Filter Dropdown */}
+            <FilterDropdown 
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryFilter}
             />
           </div>
         </div>
