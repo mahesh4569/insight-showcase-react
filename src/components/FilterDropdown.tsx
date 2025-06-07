@@ -32,7 +32,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 min-w-[200px] z-50 animate-scale-in">
+        <div className="absolute top-full mt-2 right-0 bg-slate-800/95 backdrop-blur-md border border-slate-600/50 rounded-2xl p-2 min-w-[200px] z-[100] shadow-2xl animate-scale-in">
           {categories.map((category) => (
             <button
               key={category}
@@ -42,8 +42,8 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
               }}
               className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-300 text-sm ${
                 selectedCategory === category
-                  ? 'bg-blue-600/50 text-white'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-blue-600/70 text-white shadow-md'
+                  : 'text-slate-200 hover:text-white hover:bg-slate-700/50'
               }`}
             >
               {formatCategoryName(category)}
@@ -55,7 +55,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
       {/* Backdrop to close dropdown */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[90]"
           onClick={() => setIsOpen(false)}
         />
       )}
