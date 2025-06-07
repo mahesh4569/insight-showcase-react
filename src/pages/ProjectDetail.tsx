@@ -1,62 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Download, ExternalLink, Calendar, User } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { Project } from '@/hooks/useProjects';
-
-interface ProjectScreenshot {
-  id: string;
-  image_url: string;
-  caption?: string;
-  display_order: number;
-}
+import { ArrowLeft, ExternalLink, Download, Github, Calendar, User } from 'lucide-react';
+import { useProjects } from '../hooks/useProjects';
+import { useProjectScreenshots } from '../hooks/useProjectScreenshots';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<Project | null>(null);
-  const [screenshots, setScreenshots] = useState<ProjectScreenshot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { projects, loading: projectsLoading } = useProjects();
+  const { screenshots, loading: screenshotsLoading } = useProjectScreenshots(id);
 
-  useEffect(() => {
-    if (id) {
-      fetchProjectDetails();
-    }
-  }, [id]);
+  const project = projects.find(p => p.id === id);
 
-  const fetchProjectDetails = async () => {
-    try {
-      // Fetch project details
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (projectError) throw projectError;
-      setProject(projectData);
-
-      // Fetch screenshots
-      const { data: screenshotsData, error: screenshotsError } = await supabase
-        .from('project_screenshots')
-        .select('*')
-        .eq('project_id', id)
-        .order('display_order', { ascending: true });
-
-      if (screenshotsError) throw screenshotsError;
-      setScreenshots(screenshotsData || []);
-    } catch (error) {
-      console.error('Error fetching project details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (projectsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center animate-fadeInUp">
+          <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400 text-lg animate-pulse">Loading project...</p>
+        </div>
       </div>
     );
   }
@@ -64,9 +26,11 @@ const ProjectDetail = () => {
   if (!project) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Project Not Found</h1>
-          <Link to="/" className="text-blue-400 hover:text-blue-300">← Back to Projects</Link>
+        <div className="text-center animate-fadeInUp">
+          <h1 className="text-4xl font-bold text-white mb-4">Project Not Found</h1>
+          <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors">
+            ← Back to Projects
+          </Link>
         </div>
       </div>
     );
@@ -75,142 +39,162 @@ const ProjectDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
-      <div className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="container mx-auto px-6 py-4">
-          <Link 
-            to="/" 
-            className="inline-flex items-center space-x-2 text-slate-300 hover:text-white transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Projects</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-white">{project.title}</h1>
-          <div className="flex items-center space-x-4 mt-2 text-slate-400 text-sm">
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4" />
-              <span>{new Date(project.created_at).toLocaleDateString()}</span>
+      <div className="bg-white/10 backdrop-blur-md border-b border-white/20 animate-scale-in">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+              Mahesh
+            </div>
+            <div className="border-l border-white/30 pl-4">
+              <Link
+                to="/"
+                className="flex items-center space-x-2 text-slate-300 hover:text-white transition-all duration-300 hover:scale-105 transform"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Back to Projects</span>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Hero Image */}
+      <div className="container mx-auto px-6 py-12">
+        {/* Project Header */}
+        <div className="mb-12 animate-fadeInUp">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Main Image */}
             {project.image_url && (
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden">
+              <div className="lg:w-1/2">
                 <img
                   src={project.image_url}
                   alt={project.title}
-                  className="w-full h-64 object-cover cursor-pointer"
-                  onClick={() => setSelectedImage(project.image_url!)}
+                  className="w-full rounded-2xl shadow-2xl object-cover transition-transform duration-500 hover:scale-105"
                 />
               </div>
             )}
 
-            {/* Description */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Description</h2>
-              <p className="text-slate-300 leading-relaxed">{project.description}</p>
-            </div>
-
-            {/* KPI Notes */}
-            {project.kpi_notes && (
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Key Performance Insights</h2>
-                <div className="text-slate-300 whitespace-pre-wrap">{project.kpi_notes}</div>
+            {/* Project Info */}
+            <div className="lg:w-1/2 space-y-6">
+              <div>
+                <h1 className="text-4xl lg:text-5xl font-bold text-white mb-4 animate-pulse">
+                  {project.title}
+                </h1>
+                <p className="text-slate-300 text-lg leading-relaxed animate-fadeInUp" style={{animationDelay: '0.2s'}}>
+                  {project.description}
+                </p>
               </div>
-            )}
 
-            {/* Screenshots Gallery */}
-            {screenshots.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Project Screenshots</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {screenshots.map((screenshot) => (
-                    <div key={screenshot.id} className="space-y-2">
-                      <img
-                        src={screenshot.image_url}
-                        alt={screenshot.caption || 'Project screenshot'}
-                        className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => setSelectedImage(screenshot.image_url)}
-                      />
-                      {screenshot.caption && (
-                        <p className="text-sm text-slate-400">{screenshot.caption}</p>
-                      )}
-                    </div>
+              {/* Tech Stack */}
+              <div className="animate-fadeInUp" style={{animationDelay: '0.3s'}}>
+                <h3 className="text-xl font-semibold text-white mb-3">Tech Stack</h3>
+                <div className="flex flex-wrap gap-2">
+                  {project.tech_stack.map((tech, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium transition-all duration-300 hover:bg-blue-600/50 hover:scale-110 transform"
+                    >
+                      {tech}
+                    </span>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Tech Stack */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Tech Stack</h3>
-              <div className="flex flex-wrap gap-2">
-                {project.tech_stack.map((tech, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-600/30 text-blue-300 text-sm rounded-full border border-blue-500/30"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
-              <div className="space-y-3">
-                {project.download_link && (
-                  <a
-                    href={project.download_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 font-medium"
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>Download Project</span>
-                  </a>
-                )}
+              {/* Project Links */}
+              <div className="flex flex-wrap gap-4 animate-fadeInUp" style={{animationDelay: '0.4s'}}>
                 {project.live_link && (
                   <a
                     href={project.live_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-slate-700/50 hover:bg-slate-600/50 text-white py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 font-medium"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform"
                   >
                     <ExternalLink className="w-5 h-5" />
-                    <span>View Live Demo</span>
+                    <span>Live Demo</span>
                   </a>
                 )}
+                {project.download_link && (
+                  <a
+                    href={project.download_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Download</span>
+                  </a>
+                )}
+              </div>
+
+              {/* Project Meta */}
+              <div className="text-slate-400 text-sm space-y-2 animate-fadeInUp" style={{animationDelay: '0.5s'}}>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>By Mahesh</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Image Modal */}
-      {selectedImage && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="max-w-4xl max-h-full">
-            <img
-              src={selectedImage}
-              alt="Enlarged view"
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
+        {/* KPI Notes */}
+        {project.kpi_notes && (
+          <div className="mb-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 animate-fadeInUp" style={{animationDelay: '0.6s'}}>
+            <h2 className="text-2xl font-bold text-white mb-6 animate-pulse">Key Performance Insights</h2>
+            <div className="prose prose-invert max-w-none">
+              <p className="text-slate-300 text-lg leading-relaxed whitespace-pre-wrap">
+                {project.kpi_notes}
+              </p>
+            </div>
           </div>
+        )}
+
+        {/* Screenshots Gallery */}
+        {screenshots.length > 0 && (
+          <div className="mb-12 animate-fadeInUp" style={{animationDelay: '0.7s'}}>
+            <h2 className="text-2xl font-bold text-white mb-8 animate-pulse">Project Screenshots</h2>
+            {screenshotsLoading ? (
+              <div className="text-center py-8">
+                <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-400 animate-pulse">Loading screenshots...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {screenshots.map((screenshot, index) => (
+                  <div key={screenshot.id} className="group animate-fadeInUp" style={{animationDelay: `${0.1 * index}s`}}>
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/15 hover:scale-105 transform">
+                      <img
+                        src={screenshot.image_url}
+                        alt={screenshot.caption || `Screenshot ${index + 1}`}
+                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      {screenshot.caption && (
+                        <div className="p-4">
+                          <p className="text-slate-300 text-sm">{screenshot.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Back to Projects */}
+        <div className="text-center animate-fadeInUp" style={{animationDelay: '0.8s'}}>
+          <Link
+            to="/"
+            className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-8 py-4 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105 transform"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>View All Projects</span>
+          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 };
