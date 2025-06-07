@@ -10,6 +10,7 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { projects, loading, deleteProject } = useProjects();
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +28,16 @@ const Dashboard = () => {
     if (confirm('Are you sure you want to delete this project?')) {
       await deleteProject(projectId);
     }
+  };
+
+  const handleEditProject = (project: any) => {
+    setEditingProject(project);
+    setShowUploadForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowUploadForm(false);
+    setEditingProject(null);
   };
 
   if (!user) {
@@ -165,7 +176,10 @@ const Dashboard = () => {
                               <Eye className="w-4 h-4" />
                             </a>
                           )}
-                          <button className="p-2 text-slate-400 hover:text-green-400 transition-colors">
+                          <button 
+                            onClick={() => handleEditProject(project)}
+                            className="p-2 text-slate-400 hover:text-green-400 transition-colors"
+                          >
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
@@ -188,7 +202,9 @@ const Dashboard = () => {
       {/* Upload Form Modal */}
       {showUploadForm && (
         <ProjectUploadForm
-          onClose={() => setShowUploadForm(false)}
+          onClose={handleCloseForm}
+          project={editingProject}
+          isEditing={!!editingProject}
         />
       )}
     </div>

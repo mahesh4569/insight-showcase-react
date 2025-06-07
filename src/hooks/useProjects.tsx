@@ -12,6 +12,8 @@ export interface Project {
   image_url?: string;
   download_link?: string;
   live_link?: string;
+  kpi_notes?: string;
+  screenshots?: string[];
   created_at: string;
   updated_at: string;
 }

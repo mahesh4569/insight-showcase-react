@@ -33,6 +33,41 @@ export type Database = {
         }
         Relationships: []
       }
+      project_screenshots: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          project_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          project_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_screenshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
@@ -40,7 +75,9 @@ export type Database = {
           download_link: string | null
           id: string
           image_url: string | null
+          kpi_notes: string | null
           live_link: string | null
+          screenshots: string[] | null
           tech_stack: string[]
           title: string
           updated_at: string
@@ -52,7 +89,9 @@ export type Database = {
           download_link?: string | null
           id?: string
           image_url?: string | null
+          kpi_notes?: string | null
           live_link?: string | null
+          screenshots?: string[] | null
           tech_stack?: string[]
           title: string
           updated_at?: string
@@ -64,7 +103,9 @@ export type Database = {
           download_link?: string | null
           id?: string
           image_url?: string | null
+          kpi_notes?: string | null
           live_link?: string | null
+          screenshots?: string[] | null
           tech_stack?: string[]
           title?: string
           updated_at?: string

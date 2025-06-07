@@ -1,24 +1,28 @@
-
 import React, { useState } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
 import FileUploadForm from './FileUploadForm';
+import ScreenshotManager from './ScreenshotManager';
 
 interface ProjectUploadFormProps {
   onClose: () => void;
+  project?: any;
+  isEditing?: boolean;
 }
 
-const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose }) => {
+const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project, isEditing = false }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    image_url: '',
-    download_link: '',
-    live_link: '',
-    tech_stack: ['']
+    title: project?.title || '',
+    description: project?.description || '',
+    image_url: project?.image_url || '',
+    download_link: project?.download_link || '',
+    live_link: project?.live_link || '',
+    kpi_notes: project?.kpi_notes || '',
+    tech_stack: project?.tech_stack || ['']
   });
   const [loading, setLoading] = useState(false);
-  const { createProject } = useProjects();
+  const [showScreenshotManager, setShowScreenshotManager] = useState(false);
+  const { createProject, updateProject } = useProjects();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +33,19 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose }) => {
         ...formData,
         tech_stack: formData.tech_stack.filter(tech => tech.trim() !== '')
       };
-      await createProject(cleanedData);
+      
+      if (isEditing && project) {
+        await updateProject(project.id, cleanedData);
+      } else {
+        const newProject = await createProject(cleanedData);
+        if (newProject && cleanedData.image_url) {
+          setShowScreenshotManager(true);
+          return; // Don't close the form yet if we want to add screenshots
+        }
+      }
       onClose();
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error saving project:', error);
     } finally {
       setLoading(false);
     }
@@ -72,9 +85,11 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-white/20 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">Upload New Project</h2>
+          <h2 className="text-xl font-bold text-white">
+            {isEditing ? 'Edit Project' : 'Upload New Project'}
+          </h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors"
@@ -83,133 +98,170 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Project Title
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-              placeholder="Enter project title"
-              required
-            />
-          </div>
+        <div className="p-6">
+          {showScreenshotManager && project ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">Project Created Successfully!</h3>
+                <p className="text-slate-300 mb-6">Now you can add screenshots and manage your project.</p>
+              </div>
+              <ScreenshotManager projectId={project.id} />
+              <div className="flex justify-center">
+                <button
+                  onClick={onClose}
+                  className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors duration-300"
+                >
+                  Finish
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Project Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                  placeholder="Enter project title"
+                  required
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              rows={4}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 resize-none"
-              placeholder="Describe your project..."
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 resize-none"
+                  placeholder="Describe your project..."
+                  required
+                />
+              </div>
 
-          <FileUploadForm
-            onFileUploaded={handleImageUpload}
-            accept="image/*"
-            bucket="project-images"
-            folder="thumbnails"
-            label="Project Thumbnail"
-          />
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  KPI Notes & Key Insights
+                </label>
+                <textarea
+                  value={formData.kpi_notes}
+                  onChange={(e) => setFormData({...formData, kpi_notes: e.target.value})}
+                  rows={6}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 resize-none"
+                  placeholder="Add key performance indicators, insights, results, impact metrics, or any important notes about this project..."
+                />
+              </div>
 
-          {formData.image_url && (
-            <div className="mt-2">
-              <img 
-                src={formData.image_url} 
-                alt="Preview" 
-                className="w-full h-32 object-cover rounded-lg"
+              <FileUploadForm
+                onFileUploaded={handleImageUpload}
+                accept="image/*"
+                bucket="project-images"
+                folder="thumbnails"
+                label="Project Thumbnail"
               />
-            </div>
-          )}
 
-          <FileUploadForm
-            onFileUploaded={handleFileUpload}
-            bucket="project-files"
-            folder="downloads"
-            label="Project Files"
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Live Demo Link (Optional)
-            </label>
-            <input
-              type="url"
-              value={formData.live_link}
-              onChange={(e) => setFormData({...formData, live_link: e.target.value})}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-              placeholder="https://example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Tech Stack
-            </label>
-            <div className="space-y-3">
-              {formData.tech_stack.map((tech, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={tech}
-                    onChange={(e) => updateTechStackItem(index, e.target.value)}
-                    className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
-                    placeholder="e.g., Python, Excel, Power BI"
+              {formData.image_url && (
+                <div className="mt-2">
+                  <img 
+                    src={formData.image_url} 
+                    alt="Preview" 
+                    className="w-full h-32 object-cover rounded-lg"
                   />
-                  {formData.tech_stack.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeTechStackItem(index)}
-                      className="p-3 text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  )}
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={addTechStackItem}
-                className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm">Add Technology</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex space-x-4 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg transition-colors duration-300"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Upload className="w-5 h-5" />
-                  <span>Upload Project</span>
-                </>
               )}
-            </button>
-          </div>
-        </form>
+
+              <FileUploadForm
+                onFileUploaded={handleFileUpload}
+                bucket="project-files"
+                folder="downloads"
+                label="Project Files"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Live Demo Link (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.live_link}
+                  onChange={(e) => setFormData({...formData, live_link: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Tech Stack
+                </label>
+                <div className="space-y-3">
+                  {formData.tech_stack.map((tech, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={tech}
+                        onChange={(e) => updateTechStackItem(index, e.target.value)}
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                        placeholder="e.g., Python, Excel, Power BI"
+                      />
+                      {formData.tech_stack.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTechStackItem(index)}
+                          className="p-3 text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addTechStackItem}
+                    className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm">Add Technology</span>
+                  </button>
+                </div>
+              </div>
+
+              {isEditing && project && (
+                <ScreenshotManager projectId={project.id} />
+              )}
+
+              <div className="flex space-x-4 pt-6">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg transition-colors duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5" />
+                      <span>{isEditing ? 'Update Project' : 'Upload Project'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
