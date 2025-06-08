@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter, User, MessageCircle } from 'lucide-react';
+import { Search, Download, Mail, Github, Linkedin, ExternalLink, User, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import ContactButton from '../components/ContactButton';
-import FilterDropdown from '../components/FilterDropdown';
+import BubbleFilter from '../components/BubbleFilter';
 import ProjectPagination from '../components/ProjectPagination';
 import { useProjects } from '../hooks/useProjects';
 import { useAuth } from '../hooks/useAuth';
@@ -13,19 +13,19 @@ const PROJECTS_PER_PAGE = 6;
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const { projects, loading } = useProjects();
   const { user } = useAuth();
 
   React.useEffect(() => {
-    filterProjects(searchTerm, selectedCategory);
-  }, [projects, searchTerm, selectedCategory]);
+    filterProjects(searchTerm, selectedCategories);
+  }, [projects, searchTerm, selectedCategories]);
 
   React.useEffect(() => {
     setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategories]);
 
   // Get unique categories from projects with better skill extraction
   const categories = ['all', ...new Set(projects.flatMap(project => 
@@ -34,15 +34,30 @@ const Index = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    filterProjects(term, selectedCategory);
+    filterProjects(term, selectedCategories);
   };
 
-  const handleCategoryFilter = (category: string) => {
-    setSelectedCategory(category);
-    filterProjects(searchTerm, category);
+  const handleCategoryToggle = (category: string) => {
+    let newSelectedCategories;
+    
+    if (selectedCategories.includes(category)) {
+      // Remove category if already selected
+      newSelectedCategories = selectedCategories.filter(cat => cat !== category);
+    } else {
+      // Add category if not selected
+      newSelectedCategories = [...selectedCategories, category];
+    }
+    
+    setSelectedCategories(newSelectedCategories);
+    filterProjects(searchTerm, newSelectedCategories);
   };
 
-  const filterProjects = (searchTerm: string, category: string) => {
+  const handleClearAllFilters = () => {
+    setSelectedCategories([]);
+    filterProjects(searchTerm, []);
+  };
+
+  const filterProjects = (searchTerm: string, categories: string[]) => {
     let filtered = projects;
 
     // Filter by search term
@@ -56,11 +71,13 @@ const Index = () => {
       );
     }
 
-    // Filter by category/skill
-    if (category !== 'all') {
+    // Filter by categories/skills (multi-select)
+    if (categories.length > 0) {
       filtered = filtered.filter(project => 
-        Array.isArray(project.tech_stack) && project.tech_stack.some((tech: string) => 
-          tech.toLowerCase() === category.toLowerCase()
+        Array.isArray(project.tech_stack) && categories.some(category =>
+          project.tech_stack.some((tech: string) => 
+            tech.toLowerCase() === category.toLowerCase()
+          )
         )
       );
     }
@@ -150,10 +167,9 @@ Best regards,
             Explore my collection of data-driven insights and analytical solutions that transform complex datasets into actionable business intelligence.
           </p>
           
-          {/* Search and Filter Bar */}
-          <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center animate-fadeInUp" style={{animationDelay: '0.4s'}}>
-            {/* Search Bar */}
-            <div className="flex-1 relative">
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto animate-fadeInUp" style={{animationDelay: '0.3s'}}>
+            <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
@@ -161,15 +177,6 @@ Best regards,
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 focus:scale-105 transform"
-              />
-            </div>
-            
-            {/* Filter Dropdown */}
-            <div className="animate-scale-in">
-              <FilterDropdown 
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategoryChange={handleCategoryFilter}
               />
             </div>
           </div>
@@ -185,21 +192,24 @@ Best regards,
           </div>
         ) : (
           <>
+            {/* Bubble Filter */}
+            <BubbleFilter
+              categories={categories}
+              selectedCategories={selectedCategories}
+              onCategoryToggle={handleCategoryToggle}
+              onClearAll={handleClearAllFilters}
+            />
+
             {/* Projects Count */}
             {filteredProjects.length > 0 && (
               <div className="mb-8 text-center animate-fadeInUp">
                 <p className="text-slate-300">
                   Showing {currentProjects.length} of {filteredProjects.length} projects
-                  {selectedCategory !== 'all' && (
-                    <span className="ml-2 px-3 py-1 bg-blue-600/30 text-blue-300 text-sm rounded-full">
-                      {selectedCategory}
-                    </span>
-                  )}
                 </p>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-500">
               {currentProjects.map((project, index) => (
                 <div key={project.id} className="animate-fadeInUp hover:scale-105 transition-transform duration-300" style={{animationDelay: `${0.1 * index}s`}}>
                   <ProjectCard project={project} index={index} />
