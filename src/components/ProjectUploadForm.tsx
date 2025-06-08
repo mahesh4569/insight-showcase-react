@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
@@ -84,21 +85,21 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-white/20 flex justify-between items-center">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-[9999] animate-fadeInUp">
+      <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
           <h2 className="text-xl font-bold text-white">
             {isEditing ? 'Edit Project' : 'Upload New Project'}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 bg-slate-900/50">
           {showScreenshotManager && project ? (
             <div className="space-y-6">
               <div className="text-center">
@@ -125,7 +126,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                  className="w-full px-4 py-3 bg-slate-800/80 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   placeholder="Enter project title"
                   required
                 />
@@ -139,7 +140,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   rows={4}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 resize-none"
+                  className="w-full px-4 py-3 bg-slate-800/80 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none"
                   placeholder="Describe your project..."
                   required
                 />
@@ -153,7 +154,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   value={formData.kpi_notes}
                   onChange={(e) => setFormData({...formData, kpi_notes: e.target.value})}
                   rows={6}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 resize-none"
+                  className="w-full px-4 py-3 bg-slate-800/80 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none"
                   placeholder="Add key performance indicators, insights, results, impact metrics, or any important notes about this project..."
                 />
               </div>
@@ -171,7 +172,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   <img 
                     src={formData.image_url} 
                     alt="Preview" 
-                    className="w-full h-32 object-cover rounded-lg"
+                    className="w-full h-32 object-cover rounded-lg border border-slate-600/50"
                   />
                 </div>
               )}
@@ -191,7 +192,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   type="url"
                   value={formData.live_link}
                   onChange={(e) => setFormData({...formData, live_link: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                  className="w-full px-4 py-3 bg-slate-800/80 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   placeholder="https://example.com"
                 />
               </div>
@@ -207,14 +208,14 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                         type="text"
                         value={tech}
                         onChange={(e) => updateTechStackItem(index, e.target.value)}
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+                        className="flex-1 px-4 py-3 bg-slate-800/80 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                         placeholder="e.g., Python, Excel, Power BI"
                       />
                       {formData.tech_stack.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeTechStackItem(index)}
-                          className="p-3 text-red-400 hover:text-red-300 transition-colors"
+                          className="p-3 text-red-400 hover:text-red-300 hover:bg-slate-700/50 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -224,7 +225,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                   <button
                     type="button"
                     onClick={addTechStackItem}
-                    className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+                    className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 hover:bg-slate-700/30 rounded-lg"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="text-sm">Add Technology</span>
@@ -233,21 +234,23 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
               </div>
 
               {isEditing && project && (
-                <ScreenshotManager projectId={project.id} />
+                <div className="border-t border-slate-700/50 pt-6">
+                  <ScreenshotManager projectId={project.id} />
+                </div>
               )}
 
-              <div className="flex space-x-4 pt-6">
+              <div className="flex space-x-4 pt-6 border-t border-slate-700/50">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg transition-colors duration-300"
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg transition-colors duration-300 font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 font-medium"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

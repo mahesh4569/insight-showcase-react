@@ -65,8 +65,8 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-all duration-300 ${
           dragActive
-            ? 'border-blue-400 bg-blue-400/10'
-            : 'border-white/20 bg-white/5 hover:border-white/30'
+            ? 'border-blue-500 bg-blue-500/10'
+            : 'border-slate-600/50 bg-slate-800/30 hover:border-slate-500/50'
         } ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
