@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
@@ -85,7 +84,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-[9999] animate-fadeInUp">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 z-[9999] animate-fadeInUp">
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
           <h2 className="text-xl font-bold text-white">
@@ -181,8 +180,22 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
                 onFileUploaded={handleFileUpload}
                 bucket="project-files"
                 folder="downloads"
-                label="Project Files"
+                label="Project Files (Any file type supported)"
               />
+
+              {formData.download_link && (
+                <div className="mt-2 p-3 bg-slate-800/50 rounded-lg border border-slate-600/50">
+                  <p className="text-sm text-slate-300">File uploaded successfully!</p>
+                  <a 
+                    href={formData.download_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 underline text-sm"
+                  >
+                    View uploaded file
+                  </a>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">

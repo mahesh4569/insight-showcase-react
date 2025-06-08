@@ -13,13 +13,16 @@ interface FileUploadFormProps {
 
 const FileUploadForm: React.FC<FileUploadFormProps> = ({
   onFileUploaded,
-  accept = "image/*",
+  accept,
   bucket,
   folder,
   label
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const { uploadFile, uploading } = useFileUpload();
+
+  // Set default accept based on bucket type if not provided
+  const acceptTypes = accept || (bucket === 'project-images' ? 'image/*' : '*/*');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -57,6 +60,13 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({
     }
   };
 
+  const getFileTypeDescription = () => {
+    if (bucket === 'project-images') {
+      return 'Images only (PNG, JPG, GIF, etc.)';
+    }
+    return 'Any file type (PDF, Excel, Word, PowerBI, MP4, etc.)';
+  };
+
   return (
     <div>
       <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -75,7 +85,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({
       >
         <input
           type="file"
-          accept={accept}
+          accept={acceptTypes}
           onChange={handleInputChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={uploading}
@@ -99,7 +109,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({
                 Drop files here or click to browse
               </p>
               <p className="text-xs text-slate-400">
-                {bucket === 'project-images' ? 'Images only' : 'Any file type'}
+                {getFileTypeDescription()}
               </p>
             </>
           )}
