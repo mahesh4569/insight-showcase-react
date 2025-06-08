@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter, User } from 'lucide-react';
+import { Search, Download, Mail, Github, Linkedin, ExternalLink, Filter, User, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import ContactButton from '../components/ContactButton';
@@ -52,6 +52,32 @@ const Index = () => {
     }
 
     setFilteredProjects(filtered);
+  };
+
+  const handleEmailClick = () => {
+    const subject = encodeURIComponent('Opportunity for Data Analyst Role');
+    const body = encodeURIComponent(`Hi Mahesh,
+
+I came across your data portfolio and was impressed by your projects and skills.
+
+We are currently looking for a Data Analyst to join our team at [Company Name]. Your experience with Excel, Power BI, Python, and dashboard development aligns well with what we're seeking.
+
+If you're interested, I'd love to schedule a call to discuss the role and next steps.
+
+Best regards,
+[Recruiter's Name]
+[Designation]
+[Company Name]`);
+    
+    window.open(`mailto:maheshvadla06@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const handleWhatsAppClick = () => {
+    const message = encodeURIComponent(`Hi Mahesh, I just saw your data portfolio – really impressive work! We're currently hiring for a Data Analyst role at [Company Name]. Let me know if you're open to a quick chat.
+
+– [Recruiter's Name], [Designation]`);
+    
+    window.open(`https://wa.me/919014644400?text=${message}`, '_blank');
   };
 
   return (
@@ -158,18 +184,28 @@ const Index = () => {
             Interested in collaborating or discussing data analysis opportunities? I'd love to hear from you.
           </p>
           <div className="flex justify-center space-x-6 animate-fadeInUp" style={{animationDelay: '0.4s'}}>
-            <a href="mailto:maheshvadla06@gmail.com" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform">
+            <button 
+              onClick={handleEmailClick}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform"
+            >
               <Mail className="w-5 h-5" />
               <span>Email Me</span>
-            </a>
+            </button>
             <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform">
               <Github className="w-5 h-5" />
               <span>GitHub</span>
             </a>
-            <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" className="bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform">
+            <a href="https://www.linkedin.com/in/mahesh-vadla-432579246/" target="_blank" rel="noopener noreferrer" className="bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform">
               <Linkedin className="w-5 h-5" />
               <span>LinkedIn</span>
             </a>
+            <button 
+              onClick={handleWhatsAppClick}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center space-x-2 hover:scale-110 transform"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>WhatsApp</span>
+            </button>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
+import { useToast } from '@/hooks/use-toast';
 import FileUploadForm from './FileUploadForm';
 import ScreenshotManager from './ScreenshotManager';
 
@@ -23,6 +24,7 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
   const [loading, setLoading] = useState(false);
   const [showScreenshotManager, setShowScreenshotManager] = useState(false);
   const { createProject, updateProject } = useProjects();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +38,16 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
       
       if (isEditing && project) {
         await updateProject(project.id, cleanedData);
+        toast({
+          title: "Project Updated",
+          description: "Your project has been successfully updated.",
+        });
       } else {
         const newProject = await createProject(cleanedData);
+        toast({
+          title: "Project Created",
+          description: "Your project has been successfully uploaded.",
+        });
         if (newProject && cleanedData.image_url) {
           setShowScreenshotManager(true);
           return; // Don't close the form yet if we want to add screenshots
@@ -46,6 +56,11 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
       onClose();
     } catch (error) {
       console.error('Error saving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save project. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -77,10 +92,18 @@ const ProjectUploadForm: React.FC<ProjectUploadFormProps> = ({ onClose, project,
 
   const handleImageUpload = (url: string) => {
     setFormData({ ...formData, image_url: url });
+    toast({
+      title: "Image Uploaded",
+      description: "Project thumbnail has been uploaded successfully.",
+    });
   };
 
   const handleFileUpload = (url: string) => {
     setFormData({ ...formData, download_link: url });
+    toast({
+      title: "File Uploaded",
+      description: "Project file has been uploaded successfully.",
+    });
   };
 
   return (
