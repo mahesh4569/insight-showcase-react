@@ -20,6 +20,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
   const { educations, loading: loadingEdu, addEducation, updateEducation, deleteEducation } = useEducations();
   const { experiences, loading: loadingExp, addExperience, updateExperience, deleteExperience } = useExperiences();
   const [showEduForm, setShowEduForm] = useState(false);
@@ -35,10 +36,26 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
-      // For demo, assume jpg
-      setProfilePicUrl(getProfilePicUrl(user.id, 'jpg'));
+      const updateProfilePic = () => {
+        const url = getProfilePicUrl(user.id, 'jpg', profilePicTimestamp);
+        setProfilePicUrl(url);
+      };
+      
+      updateProfilePic();
+
+      // Listen for profile picture updates
+      const handleProfilePicUpdate = (event: CustomEvent) => {
+        console.log('Dashboard: Profile picture updated event received:', event.detail);
+        setProfilePicTimestamp(event.detail.timestamp);
+      };
+
+      window.addEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
+      
+      return () => {
+        window.removeEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
+      };
     }
-  }, [user]);
+  }, [user, profilePicTimestamp]);
 
   const handleLogout = async () => {
     await signOut();
@@ -135,13 +152,30 @@ const Dashboard = () => {
               <div className="flex items-center gap-6">
                 <div>
                   {profilePicUrl ? (
-                    <img src={profilePicUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-blue-400" />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center text-3xl text-white">👤</div>
-                  )}
+                    <img 
+                      key={profilePicTimestamp} // Force re-render when timestamp changes
+                      src={profilePicUrl} 
+                      alt="Profile" 
+                      className="w-24 h-24 rounded-full object-cover border-4 border-blue-400"
+                      onError={(e) => {
+                        console.log('Dashboard profile image failed to load, showing fallback');
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center text-3xl text-white"
+                    style={{ display: profilePicUrl ? 'none' : 'flex' }}
+                  >
+                    👤
+                  </div>
                 </div>
                 <FileUploadForm
-                  onFileUploaded={(url) => setProfilePicUrl(url)}
+                  onFileUploaded={(url) => {
+                    console.log('Profile picture uploaded:', url);
+                    // The event listener will handle updating the state
+                  }}
                   accept="image/*"
                   bucket="profile-pics"
                   label="Upload Profile Picture"

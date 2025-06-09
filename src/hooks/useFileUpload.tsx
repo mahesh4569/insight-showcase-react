@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -14,12 +15,15 @@ export const getResumeUrl = (userId: string, fileName: string) => {
   }
 };
 
-export const getProfilePicUrl = (userId: string, ext: string = 'jpg') => {
+export const getProfilePicUrl = (userId: string, ext: string = 'jpg', timestamp?: number) => {
   try {
     const { data } = supabase.storage
       .from('profile-pics')
       .getPublicUrl(`${userId}/profile.${ext}`);
-    return data.publicUrl;
+    
+    // Add timestamp to prevent caching issues
+    const cacheBuster = timestamp || Date.now();
+    return `${data.publicUrl}?t=${cacheBuster}`;
   } catch (error) {
     console.error('Error generating profile picture URL:', error);
     return null;
@@ -46,6 +50,7 @@ const fileExists = async (bucket: string, filePath: string): Promise<boolean> =>
 
 export const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
+  const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
   const { user } = useAuth();
 
   // Function to get the correct file path based on bucket type
@@ -111,6 +116,17 @@ export const useFileUpload = () => {
 
       if (uploadError) throw uploadError;
 
+      // Update timestamp for profile pics to force refresh
+      if (bucket === 'profile-pics') {
+        const newTimestamp = Date.now();
+        setProfilePicTimestamp(newTimestamp);
+        
+        // Trigger a custom event to notify other components
+        window.dispatchEvent(new CustomEvent('profilePicUpdated', { 
+          detail: { userId: user.id, timestamp: newTimestamp } 
+        }));
+      }
+
       // Get the public URL with a cache-busting query parameter
       const { data } = supabase.storage
         .from(bucket)
@@ -168,13 +184,20 @@ export const useFileUpload = () => {
     }
   }, [checkFileExists]);
 
+  // Function to get current profile pic URL with latest timestamp
+  const getCurrentProfilePicUrl = useCallback((userId: string, ext: string = 'jpg') => {
+    return getProfilePicUrl(userId, ext, profilePicTimestamp);
+  }, [profilePicTimestamp]);
+
   return {
     uploadFile,
     deleteFile,
     uploading,
     getResumeUrl,
     getProfilePicUrl,
+    getCurrentProfilePicUrl,
     getVerifiedResumeUrl,
-    checkFileExists
+    checkFileExists,
+    profilePicTimestamp
   };
 };

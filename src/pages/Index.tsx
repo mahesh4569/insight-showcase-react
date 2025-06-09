@@ -69,6 +69,7 @@ const Index = () => {
   const { getResumeUrl } = useFileUpload();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
   const { educations, loading: loadingEdu } = useEducations(PUBLIC_USER_ID);
   const { experiences, loading: loadingExp } = useExperiences(PUBLIC_USER_ID);
   const [activeTab, setActiveTab] = useState('Projects');
@@ -87,10 +88,27 @@ const Index = () => {
     setResumeUrl(url);
   }, []);
 
-  // Always fetch the public profile pic
+  // Always fetch the public profile pic with timestamp for cache busting
   React.useEffect(() => {
-    setProfilePicUrl(getProfilePicUrl(PUBLIC_USER_ID, 'jpg'));
-  }, []);
+    const updateProfilePic = () => {
+      const url = getProfilePicUrl(PUBLIC_USER_ID, 'jpg', profilePicTimestamp);
+      setProfilePicUrl(url);
+    };
+    
+    updateProfilePic();
+
+    // Listen for profile picture updates
+    const handleProfilePicUpdate = (event: CustomEvent) => {
+      console.log('Profile picture updated event received:', event.detail);
+      setProfilePicTimestamp(event.detail.timestamp);
+    };
+
+    window.addEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
+    };
+  }, [profilePicTimestamp]);
 
   // Get unique categories from projects with better skill extraction
   const categories = ['all', ...new Set(projects.flatMap(project => 
@@ -254,10 +272,24 @@ Best regards,
           {/* Name and Profile Pic in top left */}
           <div className="absolute top-4 left-4 flex items-center gap-3">
             {profilePicUrl ? (
-              <img src={profilePicUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-blue-400" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl text-white">👤</div>
-            )}
+              <img 
+                key={profilePicTimestamp} // Force re-render when timestamp changes
+                src={profilePicUrl} 
+                alt="Profile" 
+                className="w-10 h-10 rounded-full object-cover border-2 border-blue-400"
+                onError={(e) => {
+                  console.log('Profile image failed to load, showing fallback');
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                }}
+              />
+            ) : null}
+            <div 
+              className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl text-white"
+              style={{ display: profilePicUrl ? 'none' : 'flex' }}
+            >
+              👤
+            </div>
             <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
               Mahesh
             </div>
