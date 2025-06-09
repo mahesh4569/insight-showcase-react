@@ -160,7 +160,10 @@ const Dashboard = () => {
                       onError={(e) => {
                         console.log('Dashboard profile image failed to load, showing fallback');
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                        const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (nextElement) {
+                          nextElement.style.display = 'flex';
+                        }
                       }}
                     />
                   ) : null}

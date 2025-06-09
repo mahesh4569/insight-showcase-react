@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js'; // User type supports profilePicUrl for extensibility
 import { supabase } from '@/integrations/supabase/client';
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={value}>
       {/* user.profilePicUrl is supported for extensibility */}
       {children}
     </AuthContext.Provider>

@@ -254,7 +254,7 @@ Best regards,
           <div className="absolute left-1/6 bottom-1/4 animate-float-slower opacity-5 motion-safe:animate-float-slower">
             <svg width="60" height="60" fill="none" viewBox="0 0 24 24" className="w-16 h-16 text-yellow-400/10"><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="2"/><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor"/></svg>
           </div>
-          <div className="absolute right-10 bottom-1/5 animate-float-slow opacity-5 motion-safe:animate-float-slow">
+          <div className="absolute right-10 bottom-1/5 animate-float-slow opacity-5 motion-safe:animate-float-slower">
             <svg width="60" height="60" fill="none" viewBox="0 0 24 24" className="w-16 h-16 text-purple-400/10"><path d="M12 2v20M2 12h20" stroke="currentColor" strokeWidth="2"/></svg>
           </div>
           {/* Example: Python logo (simple circle for subtlety) */}
@@ -262,7 +262,7 @@ Best regards,
             <svg width="60" height="60" fill="none" viewBox="0 0 24 24" className="w-16 h-16 text-yellow-300/10"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>
           </div>
           {/* Example: Excel icon (simple rectangle for subtlety) */}
-          <div className="absolute left-1/3 bottom-1/6 animate-float-slow opacity-5 motion-safe:animate-float-slow">
+          <div className="absolute left-1/3 bottom-1/6 animate-float-slow opacity-5 motion-safe:animate-float-slower">
             <svg width="60" height="60" fill="none" viewBox="0 0 24 24" className="w-16 h-16 text-green-600/10"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/></svg>
           </div>
         </div>
@@ -280,7 +280,10 @@ Best regards,
                 onError={(e) => {
                   console.log('Profile image failed to load, showing fallback');
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextElement) {
+                    nextElement.style.display = 'flex';
+                  }
                 }}
               />
             ) : null}
