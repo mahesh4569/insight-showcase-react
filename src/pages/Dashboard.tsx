@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
+  const [profilePicExtension, setProfilePicExtension] = useState('jpg');
   const { educations, loading: loadingEdu, addEducation, updateEducation, deleteEducation } = useEducations();
   const { experiences, loading: loadingExp, addExperience, updateExperience, deleteExperience } = useExperiences();
   const [showEduForm, setShowEduForm] = useState(false);
@@ -37,7 +38,8 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       const updateProfilePic = () => {
-        const url = getProfilePicUrl(user.id, 'jpg', profilePicTimestamp);
+        const url = getProfilePicUrl(user.id, profilePicExtension, profilePicTimestamp);
+        console.log('Dashboard: Updating profile pic URL:', url);
         setProfilePicUrl(url);
       };
       
@@ -47,6 +49,10 @@ const Dashboard = () => {
       const handleProfilePicUpdate = (event: CustomEvent) => {
         console.log('Dashboard: Profile picture updated event received:', event.detail);
         setProfilePicTimestamp(event.detail.timestamp);
+        // Update extension if provided
+        if (event.detail.extension) {
+          setProfilePicExtension(event.detail.extension);
+        }
       };
 
       window.addEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
@@ -55,7 +61,7 @@ const Dashboard = () => {
         window.removeEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
       };
     }
-  }, [user, profilePicTimestamp]);
+  }, [user, profilePicTimestamp, profilePicExtension]);
 
   const handleLogout = async () => {
     await signOut();
@@ -153,16 +159,30 @@ const Dashboard = () => {
                 <div>
                   {profilePicUrl ? (
                     <img 
-                      key={profilePicTimestamp} // Force re-render when timestamp changes
+                      key={`${profilePicTimestamp}-${profilePicExtension}`} // Force re-render when timestamp or extension changes
                       src={profilePicUrl} 
                       alt="Profile" 
                       className="w-24 h-24 rounded-full object-cover border-4 border-blue-400"
+                      onLoad={() => {
+                        console.log('Dashboard profile image loaded successfully');
+                      }}
                       onError={(e) => {
-                        console.log('Dashboard profile image failed to load, showing fallback');
+                        console.log('Dashboard profile image failed to load, trying different extensions');
                         e.currentTarget.style.display = 'none';
                         const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
                         if (nextElement) {
                           nextElement.style.display = 'flex';
+                        }
+                        
+                        // Try different extensions
+                        const extensions = ['png', 'jpg', 'jpeg', 'webp'];
+                        const currentIndex = extensions.indexOf(profilePicExtension);
+                        const nextIndex = (currentIndex + 1) % extensions.length;
+                        
+                        if (nextIndex !== currentIndex) {
+                          setTimeout(() => {
+                            setProfilePicExtension(extensions[nextIndex]);
+                          }, 100);
                         }
                       }}
                     />

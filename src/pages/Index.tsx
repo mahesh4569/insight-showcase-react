@@ -70,6 +70,7 @@ const Index = () => {
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
+  const [profilePicExtension, setProfilePicExtension] = useState('jpg');
   const { educations, loading: loadingEdu } = useEducations(PUBLIC_USER_ID);
   const { experiences, loading: loadingExp } = useExperiences(PUBLIC_USER_ID);
   const [activeTab, setActiveTab] = useState('Projects');
@@ -91,7 +92,8 @@ const Index = () => {
   // Always fetch the public profile pic with timestamp for cache busting
   React.useEffect(() => {
     const updateProfilePic = () => {
-      const url = getProfilePicUrl(PUBLIC_USER_ID, 'jpg', profilePicTimestamp);
+      const url = getProfilePicUrl(PUBLIC_USER_ID, profilePicExtension, profilePicTimestamp);
+      console.log('Updating profile pic URL:', url);
       setProfilePicUrl(url);
     };
     
@@ -101,6 +103,10 @@ const Index = () => {
     const handleProfilePicUpdate = (event: CustomEvent) => {
       console.log('Profile picture updated event received:', event.detail);
       setProfilePicTimestamp(event.detail.timestamp);
+      // Update extension if provided
+      if (event.detail.extension) {
+        setProfilePicExtension(event.detail.extension);
+      }
     };
 
     window.addEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
@@ -108,7 +114,7 @@ const Index = () => {
     return () => {
       window.removeEventListener('profilePicUpdated', handleProfilePicUpdate as EventListener);
     };
-  }, [profilePicTimestamp]);
+  }, [profilePicTimestamp, profilePicExtension]);
 
   // Get unique categories from projects with better skill extraction
   const categories = ['all', ...new Set(projects.flatMap(project => 
@@ -273,16 +279,30 @@ Best regards,
           <div className="absolute top-4 left-4 flex items-center gap-3">
             {profilePicUrl ? (
               <img 
-                key={profilePicTimestamp} // Force re-render when timestamp changes
+                key={`${profilePicTimestamp}-${profilePicExtension}`} // Force re-render when timestamp or extension changes
                 src={profilePicUrl} 
                 alt="Profile" 
                 className="w-10 h-10 rounded-full object-cover border-2 border-blue-400"
+                onLoad={() => {
+                  console.log('Profile image loaded successfully');
+                }}
                 onError={(e) => {
-                  console.log('Profile image failed to load, showing fallback');
+                  console.log('Profile image failed to load, trying different extensions');
                   e.currentTarget.style.display = 'none';
                   const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
                   if (nextElement) {
                     nextElement.style.display = 'flex';
+                  }
+                  
+                  // Try different extensions
+                  const extensions = ['png', 'jpg', 'jpeg', 'webp'];
+                  const currentIndex = extensions.indexOf(profilePicExtension);
+                  const nextIndex = (currentIndex + 1) % extensions.length;
+                  
+                  if (nextIndex !== currentIndex) {
+                    setTimeout(() => {
+                      setProfilePicExtension(extensions[nextIndex]);
+                    }, 100);
                   }
                 }}
               />

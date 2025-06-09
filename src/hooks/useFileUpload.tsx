@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -17,13 +16,19 @@ export const getResumeUrl = (userId: string, fileName: string) => {
 
 export const getProfilePicUrl = (userId: string, ext: string = 'jpg', timestamp?: number) => {
   try {
+    // Try both jpg and png extensions
+    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const extension = extensions.includes(ext.toLowerCase()) ? ext : 'jpg';
+    
     const { data } = supabase.storage
       .from('profile-pics')
-      .getPublicUrl(`${userId}/profile.${ext}`);
+      .getPublicUrl(`${userId}/profile.${extension}`);
     
     // Add timestamp to prevent caching issues
     const cacheBuster = timestamp || Date.now();
-    return `${data.publicUrl}?t=${cacheBuster}`;
+    const finalUrl = `${data.publicUrl}?t=${cacheBuster}`;
+    console.log('Generated profile pic URL:', finalUrl);
+    return finalUrl;
   } catch (error) {
     console.error('Error generating profile picture URL:', error);
     return null;
@@ -91,7 +96,7 @@ export const useFileUpload = () => {
       const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
       const fileName = getFilePath(bucket, file.name, fileExt);
 
-      console.log('Uploading file:', { bucket, fileName });
+      console.log('Uploading file:', { bucket, fileName, fileType: file.type, fileSize: file.size });
 
       // Check if file exists first
       const exists = await checkFileExists(bucket, fileName);
@@ -111,19 +116,24 @@ export const useFileUpload = () => {
         .from(bucket)
         .upload(fileName, file, { 
           upsert: true,
-          cacheControl: '3600'
+          cacheControl: '0' // Disable caching to ensure fresh images
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Update timestamp for profile pics to force refresh
       if (bucket === 'profile-pics') {
         const newTimestamp = Date.now();
         setProfilePicTimestamp(newTimestamp);
         
+        console.log('Profile picture uploaded successfully, triggering refresh event');
+        
         // Trigger a custom event to notify other components
         window.dispatchEvent(new CustomEvent('profilePicUpdated', { 
-          detail: { userId: user.id, timestamp: newTimestamp } 
+          detail: { userId: user.id, timestamp: newTimestamp, extension: fileExt } 
         }));
       }
 
