@@ -1,6 +1,5 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js'; // User type supports profilePicUrl for extensibility
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -12,8 +11,14 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// AuthContextType user supports profilePicUrl for extensibility
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export interface ExtendedUser extends User {
+  profilePicUrl?: string;
+}
+
+// user.profilePicUrl is supported for extensibility and profile features
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -39,7 +44,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // TODO: Set user.profilePicUrl here from Supabase or local state in the future
+  }, [session]);
+
   const signIn = async (email: string, password: string) => {
+    // After sign in, you can set user.profilePicUrl for extensibility
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -48,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
+    // After sign up, you can set user.profilePicUrl for extensibility
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -64,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    // On sign out, you can clear user.profilePicUrl for extensibility
     await supabase.auth.signOut();
   };
 
@@ -76,7 +88,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
+      {/* user.profilePicUrl is supported for extensibility */}
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
@@ -84,5 +101,5 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  return context as AuthContextType & { user: ExtendedUser | null };
 };

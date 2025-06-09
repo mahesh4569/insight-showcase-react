@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -16,20 +15,22 @@ export interface Project {
   screenshots?: string[];
   created_at: string;
   updated_at: string;
+  featured?: boolean;
 }
 
-export const useProjects = () => {
+export const useProjects = (userId?: string) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const id = userId || user?.id;
+      let query = supabase.from('projects').select('*').order('created_at', { ascending: false });
+      if (id) {
+        query = query.eq('user_id', id);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       setProjects(data || []);
     } catch (error) {
@@ -45,7 +46,7 @@ export const useProjects = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ ...projectData, user_id: user.id }])
+        .insert([{ ...projectData, user_id: user.id, featured: projectData.featured ?? false }])
         .select()
         .single();
 
@@ -93,7 +94,7 @@ export const useProjects = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [userId, user]);
 
   return {
     projects,

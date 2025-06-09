@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Upload, X, Image, File } from 'lucide-react';
 import { useFileUpload } from '../hooks/useFileUpload';
@@ -6,7 +5,7 @@ import { useFileUpload } from '../hooks/useFileUpload';
 interface FileUploadFormProps {
   onFileUploaded: (url: string, type: 'image' | 'file') => void;
   accept?: string;
-  bucket: 'project-images' | 'project-files';
+  bucket: 'project-images' | 'project-files' | 'resumes' | 'profile-pics';
   folder?: string;
   label: string;
 }
@@ -61,8 +60,11 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({
   };
 
   const getFileTypeDescription = () => {
-    if (bucket === 'project-images') {
+    if (bucket === 'project-images' || bucket === 'profile-pics') {
       return 'Images only (PNG, JPG, GIF, etc.)';
+    }
+    if (bucket === 'resumes') {
+      return 'Resume files only (PDF, DOC, DOCX, etc.)';
     }
     return 'Any file type (PDF, Excel, Word, PowerBI, MP4, etc.)';
   };
