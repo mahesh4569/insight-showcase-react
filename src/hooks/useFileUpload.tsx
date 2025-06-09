@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -57,7 +56,6 @@ const fileExists = async (bucket: string, filePath: string): Promise<boolean> =>
 export const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [profilePicTimestamp, setProfilePicTimestamp] = useState(Date.now());
-  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Function to get the correct file path based on bucket type
@@ -139,21 +137,6 @@ export const useFileUpload = () => {
         }));
       }
 
-      // Store resume file name for future reference
-      if (bucket === 'resumes') {
-        const resumeFileNameWithExt = `resume.${fileExt}`;
-        setResumeFileName(resumeFileNameWithExt);
-        console.log('Resume uploaded successfully:', resumeFileNameWithExt);
-        
-        // Store in localStorage for persistence
-        localStorage.setItem(`resume_filename_${user.id}`, resumeFileNameWithExt);
-        
-        // Trigger a custom event to notify other components
-        window.dispatchEvent(new CustomEvent('resumeUpdated', { 
-          detail: { userId: user.id, fileName: resumeFileNameWithExt } 
-        }));
-      }
-
       // Get the public URL with a cache-busting query parameter
       const { data } = supabase.storage
         .from(bucket)
@@ -188,54 +171,15 @@ export const useFileUpload = () => {
     }
   };
 
-  // Function to get the actual resume file name with correct extension
-  const getResumeFileName = useCallback(() => {
-    if (!user) return null;
-    
-    // First check if we have it in state
-    if (resumeFileName) return resumeFileName;
-    
-    // Then check localStorage
-    const storedFileName = localStorage.getItem(`resume_filename_${user.id}`);
-    if (storedFileName) {
-      setResumeFileName(storedFileName);
-      return storedFileName;
-    }
-    
-    // Default fallback
-    return 'resume.pdf';
-  }, [user, resumeFileName]);
-
-  // Function to get a verified resume URL with correct extension
+  // Function to get a verified resume URL
   const getVerifiedResumeUrl = useCallback(async (userId: string) => {
+    const fileName = `resume.pdf`; // Always use resume.pdf for consistency
+    const filePath = `${userId}/${fileName}`;
+    
     try {
-      // Get the actual file name with correct extension
-      const fileName = getResumeFileName();
-      if (!fileName) return null;
-      
-      const filePath = `${userId}/${fileName}`;
-      
       const exists = await checkFileExists('resumes', filePath);
       if (!exists) {
         console.log('Resume file does not exist at path:', filePath);
-        
-        // Try to find any resume file with different extensions
-        const { data: files } = await supabase.storage
-          .from('resumes')
-          .list(userId);
-        
-        if (files && files.length > 0) {
-          const resumeFile = files.find(file => file.name.startsWith('resume.'));
-          if (resumeFile) {
-            console.log('Found resume file:', resumeFile.name);
-            localStorage.setItem(`resume_filename_${userId}`, resumeFile.name);
-            setResumeFileName(resumeFile.name);
-            
-            const url = getResumeUrl(userId, resumeFile.name);
-            return url ? `${url}?t=${Date.now()}` : null;
-          }
-        }
-        
         return null;
       }
       
@@ -248,7 +192,7 @@ export const useFileUpload = () => {
       console.error('Error verifying resume URL:', error);
       return null;
     }
-  }, [checkFileExists, getResumeFileName]);
+  }, [checkFileExists]);
 
   // Function to get current profile pic URL with latest timestamp
   const getCurrentProfilePicUrl = useCallback((userId: string, ext: string = 'jpg') => {
@@ -264,7 +208,6 @@ export const useFileUpload = () => {
     getCurrentProfilePicUrl,
     getVerifiedResumeUrl,
     checkFileExists,
-    profilePicTimestamp,
-    getResumeFileName
+    profilePicTimestamp
   };
 };
