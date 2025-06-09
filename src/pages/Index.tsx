@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useProjects } from '../hooks/useProjects';
@@ -56,7 +55,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onAnimationComplete={() => setShowSplash(false)} />}
       
       {!showSplash && (
         <>
@@ -192,7 +191,7 @@ const Index = () => {
                   <span>View Projects</span>
                   <ArrowDown className="w-4 h-4" />
                 </a>
-                <ContactButton />
+                <ContactButton variant="secondary" />
               </div>
               <div className="flex flex-wrap justify-center gap-6 animate-fadeInUp animation-delay-400">
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2 text-slate-300">
